@@ -1,0 +1,1 @@
+# altchecker-3.0
