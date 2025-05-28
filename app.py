@@ -17,6 +17,11 @@ app = Flask(__name__)
 CLIENT_ID = ''
 CLIENT_SECRET = ''
 
+# Rate limiting for avatar requests
+avatar_rate_limit_per_second = 10
+avatar_request_interval = 1 / avatar_rate_limit_per_second
+avatar_last_request_time = [time.time()]
+avatar_request_lock = threading.Lock()
 
 def fetch_guild_data(character_name, realm, access_token):
     # First get character data to find guild
@@ -92,6 +97,7 @@ def get_account_characters(account_id):
     conn.close()
     return characters
 
+
 @app.route('/search_entire_guild', methods=['POST'])
 def search_entire_guild():
     # Password protection
@@ -140,14 +146,14 @@ def search_entire_guild():
     added = 0
     errors = 0
 
-    # Process with concurrent requests like your original script
+    # Process with concurrent requests - REMOVED THE [:100] LIMIT
     from concurrent.futures import ThreadPoolExecutor, as_completed
     import threading
 
     # Rate limiting
     rate_limit_per_second = 70
     request_interval = 1 / rate_limit_per_second
-    last_request_time = [time.time()]  # Use list to allow modification in nested function
+    last_request_time = [time.time()]
     request_lock = threading.Lock()
 
     def process_member_with_rate_limit(member):
@@ -162,11 +168,11 @@ def search_entire_guild():
 
         return process_single_member(member, access_token)
 
-    # Use ThreadPoolExecutor for concurrent processing
+    # Use ThreadPoolExecutor for concurrent processing - PROCESS ALL MEMBERS
     with ThreadPoolExecutor(max_workers=50) as executor:
         future_to_member = {
             executor.submit(process_member_with_rate_limit, member): member
-            for member in members_to_process[:100]  # Limit batch size
+            for member in members_to_process  # REMOVED [:100] - now processes ALL members
         }
 
         for future in as_completed(future_to_member):
@@ -212,30 +218,116 @@ def process_single_member(member, access_token):
     except Exception as e:
         return {'success': False, 'reason': f'exception: {str(e)}'}
 
+def get_character_avatar_threaded(character_name, realm, region="eu"):
+    global avatar_last_request_time, avatar_request_lock
+
+    # Apply rate limiting
+    with avatar_request_lock:
+        current_time = time.time()
+        time_since_last = current_time - avatar_last_request_time[0]
+        if time_since_last < avatar_request_interval:
+            sleep(avatar_request_interval - time_since_last)
+        avatar_last_request_time[0] = time.time()
+
+    access_token = get_access_token()
+    if not access_token:
+        return None
+
+    realm_slug = realm.lower()
+    character_name_api = character_name.lower()
+
+    url = f"https://{region}.api.blizzard.com/profile/wow/character/{realm_slug}/{character_name_api}/character-media?namespace=profile-{region}&locale=en_EU"
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+
+    try:
+        response = requests.get(url, headers=headers, timeout=3)
+        response.raise_for_status()
+        character_media = response.json()
+
+        if 'assets' in character_media:
+            for asset in character_media['assets']:
+                if asset.get('key') == 'avatar':
+                    return asset['value']
+            if character_media['assets']:
+                return character_media['assets'][0]['value']
+        return None
+    except:
+        return None
+
+@app.route('/get_avatars_batch', methods=['POST'])
+def get_avatars_batch():
+    characters = request.json.get('characters', [])
+    if not characters:
+        return jsonify({'avatars': {}})
+
+    access_token = get_access_token()
+    if not access_token:
+        return jsonify({'avatars': {}})
+
+    def fetch_single_avatar(char_data):
+        character_name = char_data['name']
+        realm = char_data['realm']
+        avatar_url = get_character_avatar_threaded(character_name, realm)
+        return f"{character_name}-{realm}", avatar_url
+
+    avatars = {}
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_char = {
+            executor.submit(fetch_single_avatar, char): char
+            for char in characters
+        }
+
+        for future in as_completed(future_to_char):
+            try:
+                char_key, avatar_url = future.result(timeout=10)
+                avatars[char_key] = avatar_url
+            except:
+                char = future_to_char[future]
+                avatars[f"{char['name']}-{char['realm']}"] = None
+
+    return jsonify({'avatars': avatars})
 
 @app.route('/get_avatar/<character_name>/<realm>')
 def get_avatar(character_name, realm):
-    avatar_url = get_character_avatar(character_name, realm)
+    avatar_url = get_character_avatar_threaded(character_name, realm)
 
     if avatar_url is None:
-        # If we couldn't get the avatar, try to remove the character
-        try:
-            remove_character_from_database(character_name, realm)
-            return jsonify({
-                'avatar_url': None,
-                'removed': True,
-                'message': 'Character not found and removed from database'
-            })
-        except Exception as e:
-            return jsonify({
-                'avatar_url': None,
-                'removed': False,
-                'message': 'Failed to remove character from database' # Should be specific error
-            })
+        # Instead of removing, validate character via pet data
+        access_token = get_access_token()
+        if access_token:
+            # Check if character exists by fetching pet data
+            _, _, pet_data = fetch_pet_data('eu', realm, character_name, access_token)
+
+            if pet_data == 'error_typing':
+                # Character truly doesn't exist - remove from database
+                try:
+                    remove_character_from_database(character_name, realm)
+                    return jsonify({
+                        'avatar_url': None,
+                        'removed': True,
+                        'message': 'Character not found and removed from database'
+                    })
+                except Exception as e:
+                    return jsonify({
+                        'avatar_url': None,
+                        'removed': False,
+                        'message': 'Failed to remove character from database'
+                    })
+            elif pet_data:
+                # Character exists but avatar unavailable - keep in database
+                return jsonify({
+                    'avatar_url': None,
+                    'removed': False,
+                    'valid_character': True,
+                    'message': 'Character is valid but avatar unavailable'
+                })
 
     return jsonify({
         'avatar_url': avatar_url,
-        'removed': False
+        'removed': False,
+        'valid_character': True if avatar_url else False
     })
 
 def get_character_avatar(character_name, realm, region="eu"):
