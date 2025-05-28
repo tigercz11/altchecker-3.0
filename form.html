@@ -8,66 +8,114 @@
     body {
         margin: 0;
         padding: 0;
-        font-family: Arial, sans-serif;
-        background-color: #2c2c2e;
-        color: #ffffff;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif;
+        background-color: #22252a; /* Slightly darker base background */
+        color: #e0e0e0; /* Slightly softer white for body text */
+        line-height: 1.6;
+    }
+
+    /* Webkit Scrollbar Styling */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #2c2c2e;
+        border-radius: 5px;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #555;
+        border-radius: 5px;
+        border: 2px solid #2c2c2e; /* Creates a small track border effect */
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #6b6b6b;
+    }
+
+
+    .avatar-placeholder[title*="Avatar unavailable"] {
+        border: 2px dashed #ffcc00; /* Dashed border to indicate valid but no avatar */
+    }
+
+    .avatar-placeholder[title*="Error"] {
+        border: 2px solid #ff4d4d; /* Red border for errors */
     }
 
     .search-guild-btn {
-    width: 100%;
-    padding: 10px 15px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-}
+        width: 100%;
+        padding: 12px 18px; /* Increased padding */
+        background-color: #28a745; /* Green base */
+        color: white;
+        border: none;
+        border-radius: 5px; /* Slightly more rounded */
+        font-size: 15px; /* Standardized */
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease, opacity 0.3s ease;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px; /* Increased gap */
+        /* text-transform: uppercase; /* Optional: if you want all caps */
+    }
 
     .search-guild-btn:hover:not(:disabled) {
-    background-color: #218838;
-}
+        background-color: #218838; /* Darker green on hover */
+    }
 
-.search-guild-btn:disabled {
-    background-color: #555;
-    cursor: not-allowed;
-}
+    .search-guild-btn:disabled {
+        background-color: #4a584f; /* Muted green for disabled */
+        color: #a0a0a0;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
 
-.search-guild-progress {
-    margin-top: 10px;
-    padding: 8px;
-    background-color: #2c2c2e;
-    border-radius: 4px;
-    font-size: 12px;
-    color: #ccc;
-    text-align: center;
-    display: none;
-}
+    /* Special handling for the "Unlock Guild Search" button due to inline style */
+    .search-guild-btn[onclick="checkPassword()"] {
+        /* Inline HTML style provides: background-color: #ffc107; */
+        color: #2c2c2e !important; /* Crucial for readability on yellow */
+    }
+    .search-guild-btn[onclick="checkPassword()"]:hover:not(:disabled) {
+        background-color: #e6b800 !important; /* Ensure hover matches other yellow buttons */
+        filter: brightness(1.05); /* Slight brightness increase */
+    }
+    .search-guild-btn[onclick="checkPassword()"]:disabled {
+        background-color: #555 !important;
+        color: #999 !important;
+        opacity: 0.6;
+    }
 
-.search-guild-spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid #ffffff;
-    border-top: 2px solid transparent;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+    .search-guild-progress {
+        margin-top: 12px;
+        padding: 10px;
+        background-color: #3a3a3c; /* Match column background */
+        border-radius: 4px;
+        font-size: 13px;
+        color: #ccc;
+        text-align: center;
+        display: none;
+        border: 1px solid #4a4a4c;
+    }
+
+    .search-guild-spinner {
+        width: 18px; /* Slightly larger */
+        height: 18px;
+        border: 3px solid #ffffff; /* Thicker border */
+        border-top: 3px solid transparent;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite; /* Faster spin */
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 
     .guild-actions {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #4a4a4c;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #4a4a4c;
     }
 
     .page-wrapper {
@@ -80,49 +128,31 @@
         max-width: 600px;
         margin: 0 auto 40px;
         background-color: #3a3a3c;
-        padding: 20px;
+        padding: 30px; /* Increased padding */
         border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4); /* Softer, more spread shadow */
     }
 
     .three-column-layout {
         display: flex;
-        gap: 20px;
-        justify-content: space-between; /* Default, might need center if one column missing */
-        align-items: flex-start; /* Align columns at the top */
+        gap: 25px; /* Increased gap */
+        justify-content: space-between;
+        align-items: flex-start;
     }
 
-    .characters-column:empty + .guild-column { /* If char column is empty, guild column might need margin adjustment if it was centered */
-        /* margin-left: auto; /* Centers the guild column if characters column is truly gone and not just hidden */
-        /* This depends on desired behavior if one column is missing */
-    }
-
-
-    .characters-column {
-        flex: 1;
-        background-color: #3a3a3c;
-        padding: 20px;
-        border-radius: 8px;
-        min-width: 300px; /* Minimum width before shrinking */
-        max-width: 600px; /* Max width */
-        /* display: none; Will be controlled by Jinja */
-    }
-    .characters-column:empty { /* CSS :empty might not work if there's whitespace or a H2 */
-         /* display: none; /* Better to control with Jinja or JS */
-    }
-
-
+    .characters-column,
     .guild-column {
         flex: 1;
         background-color: #3a3a3c;
-        padding: 20px;
+        padding: 25px; /* Increased padding */
         border-radius: 8px;
         min-width: 300px;
-        max-width: 600px;
-        /* display: none; Controlled by Jinja */
+        max-width: 600px; /* Max width is good */
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2); /* Subtle shadow for columns */
     }
+    .characters-column:empty,
     .guild-column:empty {
-        /* display: none; */
+         /* display: none; Handled by Jinja */
     }
 
 
@@ -131,151 +161,155 @@
         top: 20px;
     }
 
-    .guild-header, .characters-header { /* Added characters-header */
-        padding: 0 0 20px;
+    .guild-header, .characters-header {
+        padding: 0 0 15px; /* Adjusted padding */
         border-bottom: 2px solid #ffcc00;
-        margin-bottom: 20px;
+        margin-bottom: 25px; /* Increased margin */
     }
-    .guild-header h2, .characters-header h2 { /* Added characters-header */
+    .guild-header h2, .characters-header h2 {
         color: #ffcc00;
-        font-size: 1.5em;
+        font-size: 1.7em; /* Slightly larger */
+        font-weight: 600;
         margin: 0;
     }
 
 
     .guild-members {
-        max-height: 70vh; /* Example max height */
+        max-height: 70vh;
         overflow-y: auto;
-        padding-right: 10px; /* For scrollbar */
+        padding-right: 10px;
     }
 
     .guild-member {
-        padding: 10px 0;
+        padding: 12px 0; /* Increased padding */
         border-bottom: 1px solid #4a4a4c;
-        display: flex; /* For better alignment */
-        justify-content: space-between; /* Pushes level to the right */
+        display: flex;
+        justify-content: space-between;
         align-items: center;
     }
     .guild-member:last-child {
         border-bottom: none;
     }
     .guild-member a {
-        color: #ffffff;
+        color: #e0e0e0; /* Match body text */
         text-decoration: none;
-        font-size: 1em;
+        font-size: 1.05em; /* Slightly larger member names */
+        transition: color 0.2s ease;
     }
     .guild-member a:hover {
         color: #ffcc00;
     }
-    .guild-member-details { /* Wrapper for name and realm */
+    .guild-member-details {
         flex-grow: 1;
     }
     .guild-member-level {
-        /* display: block; */ /* No longer needed with flex */
-        color: #888;
+        color: #999; /* Lighter gray for level */
         font-size: 0.9em;
-        margin-left: 10px; /* Space from name/realm */
-        white-space: nowrap; /* Prevent level from wrapping */
+        margin-left: 10px;
+        white-space: nowrap;
     }
 
 
-    @media (max-width: 1200px) { /* Adjust breakpoint as needed */
+    @media (max-width: 1200px) {
         .three-column-layout {
             flex-direction: column;
-            align-items: center; /* Center columns when stacked */
+            align-items: center;
         }
         .characters-column,
         .guild-column {
-            width: 100%; /* Take full width */
-            max-width: 600px; /* But not more than center column */
-            margin-bottom: 20px; /* Space between stacked columns */
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 25px; /* Increased space */
         }
         .guild-content {
-            position: static; /* No sticky when stacked */
+            position: static;
         }
-    }
-
-    .container { /* This class seems unused for main layout, .center-column is primary */
-        /* background-color: #3a3a3c; */
-        /* padding: 20px; */
-        /* border-radius: 8px; */
-        /* box-shadow: 0 0 10px rgba(0,0,0,0.5); */
-        /* max-width: 600px; */
-        /* width: 100%; */
     }
 
     h1 {
         color: #ffcc00;
-        text-align: center; /* Center the main title */
+        text-align: center;
+        font-size: 2.8em; /* Larger title */
+        font-weight: 700; /* Bolder */
+        margin-bottom: 35px; /* More space below */
+        letter-spacing: 1px; /* Slight letter spacing */
     }
     h1 a {
         color: inherit;
         font-size: inherit;
         font-family: inherit;
         text-decoration: none;
+        transition: color 0.2s ease;
     }
-
-    /* Reverted 'a' tag general styling to avoid conflicts */
-    /* a {
-        text-align: center;
-        margin: 10px;
-        font-size: 20px;
-        font-weight: bold;
-        color: #ffffff;
-    } */
+    h1 a:hover {
+        color: #fff0c7; /* Lighter gold on hover */
+    }
 
     form {
         display: flex;
         flex-direction: column;
-        gap: 15px;
+        gap: 20px; /* Increased gap */
     }
-    input, select { /* Select not used currently */
-        padding: 10px;
-        border: 1px solid #555; /* Added subtle border */
-        background-color: #4a4a4c; /* Darker input background */
-        color: #ffffff; /* Light text for input */
-        border-radius: 4px;
+    input, select {
+        padding: 14px 16px; /* More padding */
+        border: 1px solid #555;
+        background-color: #4a4a4c;
+        color: #ffffff;
+        border-radius: 5px; /* Slightly more rounded */
         font-size: 16px;
         outline: none;
+        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
     input::placeholder {
-        color: #aaa; /* Lighter placeholder text */
+        color: #999; /* Slightly darker placeholder */
+    }
+    input:focus, select:focus {
+        border-color: #ffcc00;
+        box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.3); /* Softer focus glow */
     }
 
 
-    button {
-        padding: 10px 15px; /* Adjusted padding */
+    button { /* Styles the main "Submit" button */
+        padding: 14px 22px; /* Increased padding */
         background-color: #ffcc00;
-        color: #2c2c2e; /* Darker text for button */
-        font-weight: bold; /* Bold button text */
+        color: #2c2c2e;
+        font-weight: bold;
         border: none;
-        border-radius: 4px;
-        font-size: 16px;
+        border-radius: 5px; /* Slightly more rounded */
+        font-size: 16px; /* Standardized */
         cursor: pointer;
-        transition: background-color 0.3s ease;
-        display: flex; /* For loader alignment */
+        transition: background-color 0.3s ease, opacity 0.3s ease, transform 0.1s ease;
+        display: flex;
         justify-content: center;
         align-items: center;
+        text-transform: uppercase;
+        letter-spacing: 0.8px; /* More pronounced letter spacing */
     }
-    button:hover {
+    button:hover:not(:disabled) {
         background-color: #e6b800;
+        transform: translateY(-1px); /* Subtle lift */
+    }
+    button:active:not(:disabled) {
+        transform: translateY(0px); /* Press down effect */
     }
     button:disabled {
         background-color: #555;
+        color: #999;
         cursor: not-allowed;
+        opacity: 0.6;
     }
-    .button-text { margin-right: 5px;}
+    .button-text { margin-right: 8px; } /* Increased margin */
     .button-loader { font-style: italic; }
 
 
     .error {
         color: #ff4d4d;
-        background-color: rgba(255, 77, 77, 0.1); /* Subtle background for error */
-        padding: 10px;
-        border-radius: 4px;
+        background-color: rgba(255, 77, 77, 0.15); /* Slightly more prominent bg */
+        padding: 12px 15px; /* Increased padding */
+        border-radius: 5px;
         border: 1px solid #ff4d4d;
-        margin-bottom: 15px; /* Space below error */
-        font-weight: bold;
+        margin-bottom: 20px;
+        font-weight: 500; /* Normal bold */
         text-align: center;
     }
 
@@ -287,35 +321,39 @@
         top: 100%;
         left: 0;
         right: 0;
-        background-color: #3a3a3c;
-        border: 1px solid #555;
-        border-top: none; /* Avoid double border with input */
-        border-radius: 0 0 4px 4px; /* Rounded bottom corners */
+        background-color: #3f3f42; /* Slightly different from input for distinction */
+        border: 1px solid #5f5f62; /* Softer border */
+        border-top: none;
+        border-radius: 0 0 5px 5px;
         z-index: 1000;
         max-height: 280px;
         overflow-y: auto;
         overflow-x: hidden;
         box-sizing: border-box;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for dropdown */
     }
     .suggestion-item {
-        padding: 10px;
+        padding: 12px 15px; /* Increased padding */
         cursor: pointer;
-        border-bottom: 1px solid #4a4a4c; /* Separator for items */
+        border-bottom: 1px solid #4a4a4c;
+        transition: background-color 0.2s ease;
     }
     .suggestion-item:last-child {
         border-bottom: none;
     }
     .suggestion-item:hover {
-        background-color: #555;
+        background-color: #525255; /* Lighter hover */
     }
+    .suggestion-item strong { color: #fff; } /* Ensure strong tag is bright */
+    .suggestion-item span { color: #bbb; } /* For realm text */
 
 
     .character-item {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 8px 0; /* Reduced padding */
-        border-bottom: 1px solid #4a4a4c; /* Separator */
+        gap: 12px; /* Increased gap */
+        padding: 12px 5px; /* Adjusted padding */
+        border-bottom: 1px solid #4a4a4c;
         transition: opacity 0.3s ease;
     }
     .character-item:last-child {
@@ -323,54 +361,65 @@
     }
 
     .character-avatar {
-        width: 36px;
-        height: 36px;
+        width: 40px; /* Slightly larger avatar */
+        height: 40px;
         border-radius: 50%;
         border: 2px solid #ffcc00;
         opacity: 0;
-        transition: opacity 0.5s ease; /* Smoother transition */
-        background-color: #2c2c2e; /* Background for the image tag itself */
+        transition: opacity 0.5s ease;
+        background-color: #2c2c2e;
+        object-fit: cover; /* Ensure image covers area if not perfectly square */
     }
     .character-avatar.loaded {
         opacity: 1;
     }
 
     .avatar-placeholder {
-        width: 36px;
-        height: 36px;
+        width: 40px; /* Match avatar size */
+        height: 40px;
         border-radius: 50%;
         border: 2px solid #ffcc00;
-        background-color: #4a4a4c; /* Adjusted color */
+        background-color: #4a4a4c;
         animation: pulse 1.5s infinite ease-in-out;
     }
     @keyframes pulse {
-        0% { opacity: 0.7; }
+        0% { opacity: 0.6; } /* Dimmer start/end */
         50% { opacity: 1; }
-        100% { opacity: 0.7; }
+        100% { opacity: 0.6; }
     }
 
     .character-link {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px; /* Match item gap */
         text-decoration: none;
-        color: #ffffff;
-        flex-grow: 1; /* Allow link to take space */
+        color: #e0e0e0; /* Match body text */
+        flex-grow: 1;
+        font-size: 1.05em; /* Slightly larger */
+        transition: color 0.2s ease;
     }
     .character-link:hover {
         color: #ffcc00;
     }
+    .character-link span { /* For realm */
+        text-transform: capitalize;
+        color: #aaa; /* Softer color for realm */
+    }
+
 
     .characters-list {
         list-style: none;
         padding: 0;
-        /* transition: height 0.3s ease; Not ideal for dynamic content */
     }
 
-    /* .error-state { background-color: #ff4444 !important; } */ /* Placeholder had its own styling */
+    #guildPassword {
+        padding: 12px 15px !important; /* Override existing less specific if any, better to remove inline style from HTML */
+        margin-bottom: 15px !important;
+        width: 100% !important;
+        box-sizing: border-box !important; /* Important for width 100% */
+        /* other styles inherited from input,select or define here if needed */
+    }
 
-    /* Unused main-container, guild-container, guild-header (duplicate) removed for clarity */
-    /* Styles for .guild-header, .guild-members, .guild-member are defined above */
     </style>
 </head>
 <body>
@@ -419,7 +468,7 @@
                                         <img class="character-avatar"
                                              id="avatar-{{ character.character_name }}-{{ character.realm }}"
                                              alt="{{ character.character_name }}'s avatar"
-                                             style="display: none;"> {{ character.character_name }} - <span style="text-transform: capitalize;">{{ character.realm }}</span>
+                                             style="display: none;"> <!-- Name part -->{{ character.character_name }} - <span>{{ character.realm }}</span>
                                     </a>
                                 </li>
                             {% endfor %}
@@ -436,7 +485,7 @@
 <div class="guild-column">
     <div class="guild-content">
         <div class="guild-header">
-            <h2>Guild: {{ guild_info.name }} <span style="font-size:0.8em; color: #ccc;">({{guild_info.realm}})</span></h2>
+            <h2>Guild: {{ guild_info.name }} <span style="font-size:0.8em; color: #b0b0b0;">({{guild_info.realm}})</span></h2>
         </div>
         {% if guild_info.members %}
         <div class="guild-members">
@@ -455,12 +504,11 @@
             {% endfor %}
         </div>
 
-        <!-- Add the guild actions section -->
 <div class="guild-actions">
     <div class="password-section" id="passwordSection">
         <input type="password" id="guildPassword" placeholder="Enter password to unlock guild search"
                style="padding: 8px; margin-bottom: 10px; width: 100%; background-color: #4a4a4c; color: #ffffff; border: 1px solid #555; border-radius: 4px;">
-        <button class="search-guild-btn" onclick="checkPassword()" style="background-color: #ffc107;">
+        <button class="search-guild-btn" onclick="checkPassword()" style="background-color: #ffc107;"> <!-- Inline style here is tricky but addressed in CSS -->
             <span>Unlock Guild Search</span>
         </button>
     </div>
@@ -482,78 +530,134 @@
         </div>
     </div>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const characterNameInput = document.getElementById('character_name');
-        const realmInput = document.getElementById('realm');
-        const suggestionsList = document.getElementById('suggestions-list');
-        const characterForm = document.getElementById('character-form');
-        const submitButton = document.getElementById('submit-button');
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const characterNameInput = document.getElementById('character_name');
+    const realmInput = document.getElementById('realm');
+    const suggestionsList = document.getElementById('suggestions-list');
+    const characterForm = document.getElementById('character-form');
+    const submitButton = document.getElementById('submit-button');
 
-        if (characterForm) {
-            characterForm.addEventListener('submit', function() {
-                const buttonText = submitButton.querySelector('.button-text');
-                const buttonLoader = submitButton.querySelector('.button-loader');
+    // Form submission handler
+    if (characterForm) {
+        characterForm.addEventListener('submit', function() {
+            const buttonText = submitButton.querySelector('.button-text');
+            const buttonLoader = submitButton.querySelector('.button-loader');
 
-                submitButton.disabled = true;
-                if (buttonText) buttonText.style.display = 'none';
-                if (buttonLoader) buttonLoader.style.display = 'inline';
-            });
-        }
-
-        if (characterNameInput) {
-            characterNameInput.addEventListener('input', function() {
-                const query = this.value.trim();
-                if (query.length < 2) {
-                    suggestionsList.style.display = 'none';
-                    return;
-                }
-
-                fetch(`/suggest_names?query=${encodeURIComponent(query)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        suggestionsList.innerHTML = '';
-                        if (data.length === 0) {
-                            suggestionsList.style.display = 'none';
-                            return;
-                        }
-                        data.forEach(suggestion => {
-                            const item = document.createElement('div');
-                            // Make suggestion text more readable
-                            item.innerHTML = `<strong>${suggestion.name}</strong> - <span style="color:#ccc;">${suggestion.realm}</span>`;
-                            item.classList.add('suggestion-item');
-                            item.addEventListener('click', function() {
-                                characterNameInput.value = suggestion.name;
-                                realmInput.value = suggestion.realm; // Realm from suggestion is likely already a slug or plain name
-                                suggestionsList.style.display = 'none';
-                            });
-                            suggestionsList.appendChild(item);
-                        });
-                        suggestionsList.style.display = 'block';
-                    })
-                    .catch(error => {
-                        console.error("Error fetching suggestions:", error);
-                        suggestionsList.style.display = 'none';
-                    });
-            });
-        }
-
-        document.addEventListener('click', function(e) {
-            if (suggestionsList && characterNameInput && !suggestionsList.contains(e.target) && e.target !== characterNameInput) {
-                suggestionsList.style.display = 'none';
-            }
+            submitButton.disabled = true;
+            if (buttonText) buttonText.style.display = 'none';
+            if (buttonLoader) buttonLoader.style.display = 'inline';
         });
+    }
 
-        const characterItems = document.querySelectorAll('.character-item');
-        characterItems.forEach(characterItem => {
-            const characterName = characterItem.dataset.characterName;
-            const realm = characterItem.dataset.realm;
-            const avatarImg = characterItem.querySelector('.character-avatar');
-            const placeholder = characterItem.querySelector('.avatar-placeholder');
+    // Character name input suggestions
+    if (characterNameInput) {
+        characterNameInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            if (query.length < 2) {
+                suggestionsList.style.display = 'none';
+                return;
+            }
 
-            if (!characterName || !realm || !avatarImg || !placeholder) return;
+            fetch(`/suggest_names?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    suggestionsList.innerHTML = '';
+                    if (data.length === 0) {
+                        suggestionsList.style.display = 'none';
+                        return;
+                    }
+                    data.forEach(suggestion => {
+                        const item = document.createElement('div');
+                        item.innerHTML = `<strong>${suggestion.name}</strong> - <span>${suggestion.realm}</span>`;
+                        item.classList.add('suggestion-item');
+                        item.addEventListener('click', function() {
+                            characterNameInput.value = suggestion.name;
+                            realmInput.value = suggestion.realm;
+                            suggestionsList.style.display = 'none';
+                        });
+                        suggestionsList.appendChild(item);
+                    });
+                    suggestionsList.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error("Error fetching suggestions:", error);
+                    suggestionsList.style.display = 'none';
+                });
+        });
+    }
 
-            fetch(`/get_avatar/${encodeURIComponent(characterName)}/${encodeURIComponent(realm)}`)
+    // Click outside suggestions to close
+    document.addEventListener('click', function(e) {
+        if (suggestionsList && characterNameInput && !suggestionsList.contains(e.target) && e.target !== characterNameInput) {
+            suggestionsList.style.display = 'none';
+        }
+    });
+
+    // Check if guild search was previously unlocked
+    if (sessionStorage.getItem('guildUnlocked') === 'true') {
+        const passwordSection = document.getElementById('passwordSection');
+        const guildSearchSection = document.getElementById('guildSearchSection');
+        if(passwordSection) passwordSection.style.display = 'none';
+        if(guildSearchSection) guildSearchSection.style.display = 'block';
+    }
+
+    // Batch load all avatars
+    const characterItems = document.querySelectorAll('.character-item');
+    if (characterItems.length > 0) {
+        const characters = Array.from(characterItems).map(item => ({
+            name: item.dataset.characterName,
+            realm: item.dataset.realm
+        }));
+
+        fetch('/get_avatars_batch', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ characters: characters })
+        })
+        .then(response => response.json())
+        .then(data => {
+            characterItems.forEach(characterItem => {
+                const characterName = characterItem.dataset.characterName;
+                const realm = characterItem.dataset.realm;
+                const charKey = `${characterName}-${realm}`;
+                const avatarUrl = data.avatars[charKey];
+
+                const avatarImg = characterItem.querySelector('.character-avatar');
+                const placeholder = characterItem.querySelector('.avatar-placeholder');
+
+                if (avatarUrl && avatarImg && placeholder) {
+                    avatarImg.src = avatarUrl;
+                    avatarImg.onload = function() {
+                        placeholder.style.display = 'none';
+                        avatarImg.style.display = 'block';
+                        setTimeout(() => avatarImg.classList.add('loaded'), 50);
+                    };
+                    avatarImg.onerror = function() {
+                        placeholder.style.display = 'block';
+                        placeholder.title = 'Error: Avatar image failed to load';
+                        avatarImg.style.display = 'none';
+                    }
+                } else if (placeholder) {
+                    placeholder.style.display = 'block';
+                    placeholder.title = 'Avatar unavailable';
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error batch loading avatars:', error);
+            // Fallback to individual loading if batch fails
+            characterItems.forEach(characterItem => {
+                const characterName = characterItem.dataset.characterName;
+                const realm = characterItem.dataset.realm;
+                const avatarImg = characterItem.querySelector('.character-avatar');
+                const placeholder = characterItem.querySelector('.avatar-placeholder');
+
+                if (!characterName || !realm || !avatarImg || !placeholder) return;
+
+                fetch(`/get_avatar/${encodeURIComponent(characterName)}/${encodeURIComponent(realm)}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.removed) {
@@ -562,25 +666,14 @@
                             const list = characterItem.closest('.characters-list');
                             characterItem.remove();
                             if (list && list.children.length === 0) {
-                                // If the list is empty, update the accounts container
                                 const accountsContainer = document.getElementById('accounts-container');
                                 if (accountsContainer) {
-                                     // Remove the "Account Characters" header and the empty list
                                     const header = accountsContainer.querySelector('.characters-header');
                                     if(header) header.remove();
-                                    list.remove(); // remove the ul
-                                    // Check if any other lists/content exist before saying "No characters"
+                                    list.remove();
                                     if (accountsContainer.querySelectorAll('.characters-list').length === 0) {
                                        accountsContainer.innerHTML = '<div class="characters-header"><h2>Account Characters</h2></div><p>No characters found for this account.</p>';
                                     }
-                                }
-                            }
-                            // Check if overall character column should be hidden
-                            const anyCharItemsLeft = document.querySelector('.characters-column .character-item');
-                            if (!anyCharItemsLeft) {
-                                const charCol = document.querySelector('.characters-column');
-                                if (charCol) {
-                                     // charCol.style.display = 'none'; // Or just leave "No characters" message
                                 }
                             }
                         }, 300);
@@ -588,35 +681,41 @@
                         avatarImg.src = data.avatar_url;
                         avatarImg.onload = function() {
                             placeholder.style.display = 'none';
-                            avatarImg.style.display = 'block'; // Make sure it's block or inline-block
-                            setTimeout(() => avatarImg.classList.add('loaded'), 50); // Slight delay for CSS transition
+                            avatarImg.style.display = 'block';
+                            setTimeout(() => avatarImg.classList.add('loaded'), 50);
                         };
-                        avatarImg.onerror = function() { // Handle image load errors
-                            placeholder.style.backgroundColor = '#502020'; // Error color for placeholder
-                            placeholder.style.display = 'block'; // Ensure placeholder is visible
+                        avatarImg.onerror = function() {
+                            placeholder.style.display = 'block';
+                            placeholder.title = 'Error: Avatar image failed to load';
                             avatarImg.style.display = 'none';
                         }
+                    } else if (data.valid_character) {
+                        placeholder.style.display = 'block';
+                        avatarImg.style.display = 'none';
+                        placeholder.title = 'Valid character - Avatar unavailable';
                     } else {
-                        // No avatar URL, but character not marked as removed (e.g. API error, no media)
-                        placeholder.style.backgroundColor = '#555'; // Neutral or slightly different color
+                        placeholder.style.display = 'block';
+                        placeholder.title = 'Error: Character data issue';
+                        avatarImg.style.display = 'none';
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching avatar for ' + characterName + '-' + realm + ':', error);
-                    if (placeholder) placeholder.style.backgroundColor = '#502020'; // Error color
+                    if (placeholder) {
+                        placeholder.title = 'Error: Could not load character data';
+                        placeholder.style.display = 'block';
+                        if(avatarImg) avatarImg.style.display = 'none';
+                    }
                 });
+            });
         });
-    });
-
-    function searchGuildMember(characterName, realm) {
-        // Ensure character name is passed as is (Blizzard API usually handles casing for names)
-        // Realm should be a slug (lowercase, spaces to hyphens)
-        const realmSlug = realm.toLowerCase().replace(/ /g, '-');
-
-        // Optional: Show a global loading indicator or disable UI elements briefly
-        // For simplicity, direct redirect:
-        window.location.href = `/search_guild_member?character_name=${encodeURIComponent(characterName)}&realm=${encodeURIComponent(realmSlug)}`;
     }
+});
+
+function searchGuildMember(characterName, realm) {
+    const realmSlug = realm.toLowerCase().replace(/ /g, '-');
+    window.location.href = `/search_guild_member?character_name=${encodeURIComponent(characterName)}&realm=${encodeURIComponent(realmSlug)}`;
+}
 
 function searchEntireGuild() {
     const btn = document.getElementById('searchEntireGuildBtn');
@@ -624,7 +723,6 @@ function searchEntireGuild() {
     const progress = document.getElementById('guildProgress');
     const buttonText = btn.querySelector('.button-text');
 
-    // Get current character name and realm from the form
     const characterName = document.getElementById('character_name').value.trim();
     const realm = document.getElementById('realm').value.trim();
 
@@ -633,18 +731,19 @@ function searchEntireGuild() {
         return;
     }
 
-    // Disable button and show loading state
     btn.disabled = true;
-    buttonText.textContent = 'Processing...';
-    spinner.style.display = 'block';
-    progress.style.display = 'block';
-    progress.textContent = 'Starting guild search...';
+    if(buttonText) buttonText.textContent = 'Processing...';
+    if(spinner) spinner.style.display = 'inline-block';
+    if(progress) {
+        progress.style.display = 'block';
+        progress.textContent = 'Starting guild search...';
+        progress.style.color = '#ccc';
+    }
 
-    // Create form data
     const formData = new FormData();
     formData.append('character_name', characterName);
     formData.append('realm', realm);
-    formData.append('password', 'imraimramakaveli'); // Send password
+    formData.append('password', 'imraimramakaveli');
 
     fetch('/search_entire_guild', {
         method: 'POST',
@@ -653,51 +752,47 @@ function searchEntireGuild() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            progress.textContent = data.message;
-            progress.style.color = '#28a745';
+            if(progress) {
+                progress.textContent = data.message;
+                progress.style.color = '#28a745';
+            }
             setTimeout(() => {
-                progress.style.display = 'none';
-            }, 8000); // Show success message longer
+               if(progress) progress.style.display = 'none';
+            }, 8000);
         } else {
-            progress.textContent = 'Error: ' + data.message;
-            progress.style.color = '#ff4d4d';
+            if(progress) {
+                progress.textContent = 'Error: ' + (data.message || 'Unknown error');
+                progress.style.color = '#ff4d4d';
+            }
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        progress.textContent = 'Network error occurred. Please try again.';
-        progress.style.color = '#ff4d4d';
+        if(progress) {
+            progress.textContent = 'Network error occurred. Please try again.';
+            progress.style.color = '#ff4d4d';
+        }
     })
     .finally(() => {
-        // Reset button state
         btn.disabled = false;
-        buttonText.textContent = 'Search Entire Guild';
-        spinner.style.display = 'none';
+        if(buttonText) buttonText.textContent = 'Search Entire Guild';
+        if(spinner) spinner.style.display = 'none';
     });
 }
 
-
-
-
 function checkPassword() {
-    const password = document.getElementById('guildPassword').value;
-    if (password === 'worlet') {
+    const passwordInput = document.getElementById('guildPassword');
+    const password = passwordInput.value;
+    if (password === 'imraimramakaveli') {
         document.getElementById('passwordSection').style.display = 'none';
         document.getElementById('guildSearchSection').style.display = 'block';
-        // Store unlock status in session
         sessionStorage.setItem('guildUnlocked', 'true');
     } else {
         alert('Incorrect password');
-        document.getElementById('guildPassword').value = '';
+        passwordInput.value = '';
+        passwordInput.focus();
     }
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    if (sessionStorage.getItem('guildUnlocked') === 'true') {
-        document.getElementById('passwordSection').style.display = 'none';
-        document.getElementById('guildSearchSection').style.display = 'block';
-    }
-});
-    </script>
+</script>
 </body>
 </html>
