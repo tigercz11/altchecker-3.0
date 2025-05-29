@@ -1044,9 +1044,15 @@ function searchEntireGuild() {
 
     const characterName = document.getElementById('character_name').value.trim();
     const realm = document.getElementById('realm').value.trim();
+    const password = document.getElementById('guildPassword').value;
 
     if (!characterName || !realm) {
         alert('Please ensure character name and realm are filled in the search form above.');
+        return;
+    }
+
+    if (!password) {
+        alert('Password is required for guild search.');
         return;
     }
 
@@ -1062,7 +1068,7 @@ function searchEntireGuild() {
     const formData = new FormData();
     formData.append('character_name', characterName);
     formData.append('realm', realm);
-    formData.append('password', 'imraimramakaveli');
+    formData.append('password', password);
 
     fetch('/search_entire_guild', {
         method: 'POST',
@@ -1102,15 +1108,33 @@ function searchEntireGuild() {
 function checkPassword() {
     const passwordInput = document.getElementById('guildPassword');
     const password = passwordInput.value;
-    if (password === 'imraimramakaveli') {
-        document.getElementById('passwordSection').style.display = 'none';
-        document.getElementById('guildSearchSection').style.display = 'block';
-        sessionStorage.setItem('guildUnlocked', 'true');
-    } else {
-        alert('Incorrect password');
+
+    // Send password to server for validation
+    fetch('/validate_password', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: password })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.valid) {
+            document.getElementById('passwordSection').style.display = 'none';
+            document.getElementById('guildSearchSection').style.display = 'block';
+            sessionStorage.setItem('guildUnlocked', 'true');
+        } else {
+            alert('Incorrect password');
+            passwordInput.value = '';
+            passwordInput.focus();
+        }
+    })
+    .catch(error => {
+        console.error('Error validating password:', error);
+        alert('Error validating password. Please try again.');
         passwordInput.value = '';
         passwordInput.focus();
-    }
+    });
 }
 </script>
 </body>
