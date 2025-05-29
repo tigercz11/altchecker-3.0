@@ -11,17 +11,72 @@ from unidecode import unidecode
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
+import os
 
 app = Flask(__name__)
+
+# Add these after your existing imports, before CLIENT_ID
+API_RATE_LIMIT_PER_SECOND = 90  # Conservative limit (90/100)
+API_RATE_LIMIT_PER_HOUR = 35000  # Conservative limit (35k/36k)
+REQUEST_INTERVAL = 1.0 / API_RATE_LIMIT_PER_SECOND
+HOURLY_REQUEST_WINDOW = 3600
+
+avatar_request_times = []
+avatar_request_lock = threading.Lock()
+AVATAR_RATE_LIMIT = 10  # requests per second for avatars
+AVATAR_REQUEST_INTERVAL = 1.0 / AVATAR_RATE_LIMIT
 
 CLIENT_ID = ''
 CLIENT_SECRET = ''
 
-# Rate limiting for avatar requests
-avatar_rate_limit_per_second = 10
-avatar_request_interval = 1 / avatar_rate_limit_per_second
-avatar_last_request_time = [time.time()]
-avatar_request_lock = threading.Lock()
+# Global rate limiting tracking
+api_request_times = []
+api_request_lock = threading.Lock()
+
+# Token caching
+access_token_cache = {'token': None, 'expires_at': 0}
+token_lock = threading.Lock()
+
+def apply_avatar_rate_limit():
+    """Apply rate limiting specifically for avatar requests"""
+    with avatar_request_lock:
+        current_time = time.time()
+        # Clean old requests (older than 1 second)
+        avatar_request_times[:] = [t for t in avatar_request_times if current_time - t < 1.0]
+
+        # Check if we need to wait
+        if len(avatar_request_times) >= AVATAR_RATE_LIMIT:
+            wait_time = 1.0 - (current_time - avatar_request_times[0]) + 0.1
+            time.sleep(wait_time)
+            current_time = time.time()
+
+        # Add small delay between requests
+        if avatar_request_times:
+            time_since_last = current_time - avatar_request_times[-1]
+            if time_since_last < AVATAR_REQUEST_INTERVAL:
+                time.sleep(AVATAR_REQUEST_INTERVAL - time_since_last)
+                current_time = time.time()
+
+        avatar_request_times.append(current_time)
+
+def apply_api_rate_limit():
+    """Apply rate limiting before making API calls"""
+    with api_request_lock:
+        current_time = time.time()
+        api_request_times[:] = [t for t in api_request_times if current_time - t < HOURLY_REQUEST_WINDOW]
+
+        if len(api_request_times) >= API_RATE_LIMIT_PER_HOUR:
+            wait_time = HOURLY_REQUEST_WINDOW - (current_time - api_request_times[0]) + 1
+            time.sleep(wait_time)
+            current_time = time.time()
+
+        if api_request_times:
+            time_since_last = current_time - api_request_times[-1]
+            if time_since_last < REQUEST_INTERVAL:
+                time.sleep(REQUEST_INTERVAL - time_since_last)
+                current_time = time.time()
+
+        api_request_times.append(current_time)
 
 def fetch_guild_data(character_name, realm, access_token):
     # First get character data to find guild
@@ -31,6 +86,7 @@ def fetch_guild_data(character_name, realm, access_token):
     }
 
     try:
+        apply_api_rate_limit()  # Add rate limiting
         char_response = requests.get(char_url, headers=headers)
         char_response.raise_for_status()
         char_data = char_response.json()
@@ -45,12 +101,9 @@ def fetch_guild_data(character_name, realm, access_token):
         # Guild names in API URLs are typically slugified (lowercase, spaces to hyphens)
         guild_name_slug = guild_name.lower().replace(' ', '-')
 
-        # guild_url = f"https://eu.api.blizzard.com/data/wow/guild/{guild_realm_slug}/{guild_name_slug}/roster?namespace=profile-eu&locale=en_EU"
-        # More robust: use guild ID if available from character guild data, otherwise use name slug.
-        # For now, assuming name slug is the primary way if ID isn't readily available or used.
-        # The current structure relies on guild name and realm slug:
         guild_url = f"https://eu.api.blizzard.com/data/wow/guild/{guild_realm_slug}/{guild_name_slug}/roster?namespace=profile-eu&locale=en_EU"
 
+        apply_api_rate_limit()  # Add rate limiting
         guild_response = requests.get(guild_url, headers=headers)
         guild_response.raise_for_status()
         guild_data = guild_response.json()
@@ -58,27 +111,23 @@ def fetch_guild_data(character_name, realm, access_token):
         members = []
         for member in guild_data['members']:
             name = member['character']['name']
-            # Member realm slug is also available
-            # realm_slug_member = member['character']['realm']['slug']
-            # Using the name as it's for display and search key, slugification happens in JS/form
-            m_realm = member['character']['realm']['slug'] # Use slug for consistency if making further API calls
+            m_realm = member['character']['realm']['slug']
 
             search_url = f"/search_guild_member?character_name={quote(name)}&realm={quote(m_realm)}"
             members.append({
                 'name': name,
-                'realm': m_realm, # Store/use the slug for realm
+                'realm': m_realm,
                 'level': member['character']['level'],
                 'search_url': search_url
             })
 
         return {
             'name': guild_name,
-            'realm': guild_realm_slug, # Return the slug
+            'realm': guild_realm_slug,
             'members': members
         }
 
     except requests.exceptions.RequestException as e:
-        # Log error e for debugging
         return None
 
 def get_account_id(character_name, realm):
@@ -102,7 +151,7 @@ def get_account_characters(account_id):
 def search_entire_guild():
     # Password protection
     password = request.form.get('password', '').strip()
-    if password != 'imraimramakaveli':
+    if password != os.environ.get('GUILD_PASSWORD', 'imraimramakaveli'):
         return jsonify({'success': False, 'message': 'Invalid password.'})
 
     character_name = request.form.get('character_name', '').strip().lower()
@@ -151,25 +200,18 @@ def search_entire_guild():
     import threading
 
     # Rate limiting
+    # Rate limiting
     rate_limit_per_second = 70
     request_interval = 1 / rate_limit_per_second
     last_request_time = [time.time()]
     request_lock = threading.Lock()
 
     def process_member_with_rate_limit(member):
-        nonlocal last_request_time, request_lock
-
-        with request_lock:
-            current_time = time.time()
-            time_since_last = current_time - last_request_time[0]
-            if time_since_last < request_interval:
-                sleep(request_interval - time_since_last)
-            last_request_time[0] = time.time()
-
+        apply_api_rate_limit()
         return process_single_member(member, access_token)
 
     # Use ThreadPoolExecutor for concurrent processing - PROCESS ALL MEMBERS
-    with ThreadPoolExecutor(max_workers=50) as executor:
+    with ThreadPoolExecutor(max_workers=10) as executor:
         future_to_member = {
             executor.submit(process_member_with_rate_limit, member): member
             for member in members_to_process  # REMOVED [:100] - now processes ALL members
@@ -219,15 +261,8 @@ def process_single_member(member, access_token):
         return {'success': False, 'reason': f'exception: {str(e)}'}
 
 def get_character_avatar_threaded(character_name, realm, region="eu"):
-    global avatar_last_request_time, avatar_request_lock
-
-    # Apply rate limiting
-    with avatar_request_lock:
-        current_time = time.time()
-        time_since_last = current_time - avatar_last_request_time[0]
-        if time_since_last < avatar_request_interval:
-            sleep(avatar_request_interval - time_since_last)
-        avatar_last_request_time[0] = time.time()
+    # Apply avatar-specific rate limiting instead of global rate limiting
+    apply_avatar_rate_limit()
 
     access_token = get_access_token()
     if not access_token:
@@ -242,7 +277,7 @@ def get_character_avatar_threaded(character_name, realm, region="eu"):
     }
 
     try:
-        response = requests.get(url, headers=headers, timeout=3)
+        response = requests.get(url, headers=headers, timeout=10)  # Increased timeout
         response.raise_for_status()
         character_media = response.json()
 
@@ -253,7 +288,11 @@ def get_character_avatar_threaded(character_name, realm, region="eu"):
             if character_media['assets']:
                 return character_media['assets'][0]['value']
         return None
-    except:
+    except requests.exceptions.RequestException as e:
+        print(f"Avatar request failed for {character_name}-{realm}: {e}")  # Debug logging
+        return None
+    except Exception as e:
+        print(f"Unexpected error getting avatar for {character_name}-{realm}: {e}")  # Debug logging
         return None
 
 @app.route('/get_avatars_batch', methods=['POST'])
@@ -397,6 +436,18 @@ initialize_database()
 
 # Function to get access token for Blizzard API
 def get_access_token():
+    global access_token_cache
+
+    with token_lock:
+        current_time = time.time()
+        # Check if cached token is still valid (with 5 minute buffer)
+        if (access_token_cache['token'] and
+            current_time < access_token_cache['expires_at'] - 300):
+            return access_token_cache['token']
+
+    # Don't apply main API rate limiting to token requests - they're infrequent
+    # apply_api_rate_limit()  # Remove this line
+
     url = 'https://us.battle.net/oauth/token'
     data = {
         'grant_type': 'client_credentials',
@@ -404,12 +455,20 @@ def get_access_token():
         'client_secret': CLIENT_SECRET,
     }
     try:
-        response = requests.post(url, data=data)
+        response = requests.post(url, data=data, timeout=10)
         response.raise_for_status()
-        return response.json()['access_token']
-    except requests.exceptions.RequestException:
+        token_data = response.json()
+
+        with token_lock:
+            access_token_cache['token'] = token_data['access_token']
+            access_token_cache['expires_at'] = current_time + token_data.get('expires_in', 3600)
+
+        return access_token_cache['token']
+    except requests.exceptions.RequestException as e:
+        print(f"Token request failed: {e}")  # Debug logging
         return None
-    except KeyError: # If 'access_token' is not in the response
+    except KeyError as e:
+        print(f"Token response missing key: {e}")  # Debug logging
         return None
 
 # Function to fetch pet data
@@ -427,6 +486,7 @@ def fetch_pet_data(region, realm, character_name, access_token, timeout=5, retri
 
     for attempt in range(retries):
         try:
+            apply_api_rate_limit()  # Add rate limiting
             response = requests.get(base_url, headers=headers, timeout=timeout)
             response.raise_for_status()
             full_data = response.json()
@@ -704,6 +764,13 @@ def form():
     character_name = request.args.get('character_name', '')
     realm = request.args.get('realm', '')
     return render_template('form.html', accounts={}, character_name=character_name, realm=realm)
+
+@app.route('/validate_password', methods=['POST'])
+def validate_password():
+    password = request.json.get('password', '').strip()
+    # Get password from environment variable for security
+    correct_password = os.environ.get('GUILD_PASSWORD', 'imraimramakaveli')
+    return jsonify({'valid': password == correct_password})
 
 if __name__ == '__main__':
     initialize_database() # Ensure DB is initialized on startup
